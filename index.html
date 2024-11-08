@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Withdraw Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+    <h2>Emergency Withdraw Interface</h2>
+    <button id="connectButton">Connect Wallet</button>
+
+    <div>
+        <button onclick="emergencyWithdraw(0)">Emergency Withdraw PID 0</button>
+        <button onclick="emergencyWithdraw(1)">Emergency Withdraw PID 1</button>
+        <button onclick="emergencyWithdraw(2)">Emergency Withdraw PID 2</button>
+    </div>
+
+    <p id="status"></p>
+
+    <script>
+        let web3;
+        let contract;
+        const contractAddress = "0xa28BD4a513cE8A2B85732CbB88cA8CD596585674";
+        const contractABI = [
+            {
+                "inputs": [{"internalType": "uint256", "name": "_pid", "type": "uint256"}],
+                "name": "emergencyWithdraw",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+        // Connect wallet
+        async function connectWallet() {
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    web3 = new Web3(window.ethereum);
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                    document.getElementById("status").innerText = "Wallet connected!";
+                } catch (error) {
+                    document.getElementById("status").innerText = "Connection failed: " + error.message;
+                }
+            } else {
+                document.getElementById("status").innerText = "Please install MetaMask!";
+            }
+        }
+
+        document.getElementById("connectButton").onclick = connectWallet;
+
+        // Emergency withdraw function
+        async function emergencyWithdraw(pid) {
+            if (!contract) {
+                document.getElementById("status").innerText = "Connect wallet first.";
+                return;
+            }
+            const accounts = await web3.eth.getAccounts();
+            const account = accounts[0];
+            try {
+                await contract.methods.emergencyWithdraw(pid).send({ from: account });
+                document.getElementById("status").innerText = `Emergency Withdraw for PID ${pid} successful!`;
+            } catch (error) {
+                document.getElementById("status").innerText = `Failed: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
